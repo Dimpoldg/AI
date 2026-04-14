@@ -58,9 +58,18 @@ button{
   border-radius:8px;
   background:#3b82f6;
   color:white;
+  cursor:pointer;
 }
 
-/* FLOATING AI BUTTON */
+/* TYPING */
+#typing{
+  display:none;
+  margin:5px;
+  color:#94a3b8;
+  font-size:14px;
+}
+
+/* FLOATING BUTTON */
 .ai-float{
   position:fixed;
   bottom:20px;
@@ -97,10 +106,13 @@ button{
 
 <div id="chat" class="chat"></div>
 
+<div id="typing">🤖 Jarvis is typing...</div>
+
 <div class="input">
   <input id="msg" placeholder="Type or Speak...">
   <button onclick="send()">Send</button>
   <button onclick="startListening()">🎤</button>
+  <button onclick="clearChat()">🗑️</button>
 </div>
 
 <!-- FLOATING BUTTON -->
@@ -124,7 +136,7 @@ function addMsg(text,type){
   document.getElementById("chat").scrollTop=99999;
 }
 
-// LOAD CHAT
+// LOAD OLD CHAT
 chats.forEach(c=>addMsg(c.text,c.type));
 
 // VOICE INPUT
@@ -148,12 +160,18 @@ function speak(text){
   speechSynthesis.speak(speech);
 }
 
+// CLEAR CHAT
+function clearChat(){
+  document.getElementById("chat").innerHTML="";
+  chats=[];
+  save();
+}
+
 // AI LOGIC
 function getAI(msg){
 
   msg=msg.toLowerCase();
 
-  // NAME
   if(msg.includes("mera naam")){
     let name=msg.split(" ").pop();
     memory.name=name;
@@ -165,41 +183,16 @@ function getAI(msg){
     return memory.name ? "आपका naam "+memory.name+" hai" : "Mujhe nahi pata";
   }
 
-  // GREETING
   if(msg.includes("hello")||msg.includes("namaste")){
     return "Namaste 👋";
   }
 
-  // TIME
   if(msg.includes("time")){
     return "Abhi time hai "+new Date().toLocaleTimeString();
   }
 
-  // DATE
   if(msg.includes("date")){
     return "Aaj date hai "+new Date().toLocaleDateString();
-  }
-
-  // NOTE
-  if(msg.includes("note")){
-    memory.note=msg.replace("note","");
-    save();
-    return "Note save ho gaya";
-  }
-
-  if(msg.includes("show note")){
-    return memory.note || "Koi note nahi hai";
-  }
-
-  // OPEN APPS
-  if(msg.includes("youtube")){
-    window.open("https://youtube.com");
-    return "YouTube open kar raha hoon";
-  }
-
-  if(msg.includes("google")){
-    window.open("https://google.com");
-    return "Google open kar raha hoon";
   }
 
   if(msg.includes("instagram")){
@@ -217,7 +210,16 @@ function getAI(msg){
     return "Facebook khol raha hoon";
   }
 
-  // GOOGLE SEARCH
+  if(msg.includes("youtube")){
+    window.open("https://youtube.com");
+    return "YouTube open kar raha hoon";
+  }
+
+  if(msg.includes("google")){
+    window.open("https://google.com");
+    return "Google open kar raha hoon";
+  }
+
   if(msg.includes("search")){
     let query = msg.replace("search","").trim();
     if(query){
@@ -227,7 +229,6 @@ function getAI(msg){
     return "Kya search karna hai?";
   }
 
-  // JOKE
   if(msg.includes("joke")){
     return "Teacher: Homework kahan hai? Student: Network issue 😂";
   }
@@ -235,7 +236,7 @@ function getAI(msg){
   return "Main seekh raha hoon 🤖 aur pucho";
 }
 
-// SEND
+// SEND MESSAGE
 function send(){
   let input=document.getElementById("msg");
   let text=input.value;
@@ -244,14 +245,18 @@ function send(){
   addMsg("🧑 "+text,"user");
   chats.push({text:"🧑 "+text,type:"user"});
 
+  document.getElementById("typing").style.display="block";
+
   let reply=getAI(text);
 
   setTimeout(()=>{
+    document.getElementById("typing").style.display="none";
+
     addMsg("🤖 "+reply,"bot");
     chats.push({text:"🤖 "+reply,type:"bot"});
     save();
     speak(reply);
-  },500);
+  },1000);
 
   input.value="";
 }
