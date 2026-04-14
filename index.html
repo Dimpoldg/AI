@@ -59,6 +59,35 @@ button{
   background:#3b82f6;
   color:white;
 }
+
+/* FLOATING AI BUTTON */
+.ai-float{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  background:linear-gradient(45deg,#3b82f6,#22c55e);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  cursor:pointer;
+  box-shadow:0 0 20px rgba(59,130,246,0.7);
+  animation:pulse 1.5s infinite;
+  user-select:none;
+}
+
+.ai-float:hover{
+  transform:scale(1.1);
+}
+
+@keyframes pulse{
+  0% { box-shadow:0 0 10px rgba(59,130,246,0.5); }
+  50% { box-shadow:0 0 25px rgba(34,197,94,0.9); }
+  100% { box-shadow:0 0 10px rgba(59,130,246,0.5); }
+}
 </style>
 </head>
 
@@ -73,6 +102,9 @@ button{
   <button onclick="send()">Send</button>
   <button onclick="startListening()">🎤</button>
 </div>
+
+<!-- FLOATING BUTTON -->
+<div class="ai-float" onclick="startListening()">🎤</div>
 
 <script>
 
@@ -92,10 +124,10 @@ function addMsg(text,type){
   document.getElementById("chat").scrollTop=99999;
 }
 
-// LOAD OLD CHAT
+// LOAD CHAT
 chats.forEach(c=>addMsg(c.text,c.type));
 
-// 🎤 VOICE INPUT
+// VOICE INPUT
 let recognition = new webkitSpeechRecognition();
 recognition.lang="hi-IN";
 
@@ -109,24 +141,14 @@ recognition.onresult=function(e){
   send();
 };
 
-// 🔊 SPEAK
+// SPEAK
 function speak(text){
   let speech=new SpeechSynthesisUtterance(text);
   speech.lang="hi-IN";
-
-  let voices=speechSynthesis.getVoices();
-  let female=voices.find(v=>v.name.toLowerCase().includes("google"));
-  if(female) speech.voice=female;
-
-  // emotion
-  if(text.includes("❤️")){speech.pitch=1.4; speech.rate=0.9;}
-  else if(text.includes("sad")){speech.pitch=0.8; speech.rate=0.7;}
-  else{speech.pitch=1.2; speech.rate=1;}
-
   speechSynthesis.speak(speech);
 }
 
-// 🤖 AI LOGIC
+// AI LOGIC
 function getAI(msg){
 
   msg=msg.toLowerCase();
@@ -140,33 +162,22 @@ function getAI(msg){
   }
 
   if(msg.includes("mera naam kya hai")){
-    return memory.name ? "आपका नाम "+memory.name+" है" : "मुझे नहीं पता";
+    return memory.name ? "आपका naam "+memory.name+" hai" : "Mujhe nahi pata";
   }
 
   // GREETING
   if(msg.includes("hello")||msg.includes("namaste")){
-    return memory.name ? "नमस्ते "+memory.name+" 👋" : "नमस्ते 👋";
+    return "Namaste 👋";
   }
 
   // TIME
   if(msg.includes("time")){
-    return "अभी समय है "+new Date().toLocaleTimeString();
+    return "Abhi time hai "+new Date().toLocaleTimeString();
   }
 
   // DATE
   if(msg.includes("date")){
-    return "आज की तारीख "+new Date().toLocaleDateString();
-  }
-
-  // OPEN SITES
-  if(msg.includes("youtube")){
-    window.open("https://youtube.com");
-    return "YouTube खोल रहा हूँ";
-  }
-
-  if(msg.includes("google")){
-    window.open("https://google.com");
-    return "Google खोल रहा हूँ";
+    return "Aaj date hai "+new Date().toLocaleDateString();
   }
 
   // NOTE
@@ -180,19 +191,45 @@ function getAI(msg){
     return memory.note || "Koi note nahi hai";
   }
 
-  // DEVICE INFO
-  if(msg.includes("device")){
-    return navigator.userAgent;
+  // OPEN APPS
+  if(msg.includes("youtube")){
+    window.open("https://youtube.com");
+    return "YouTube open kar raha hoon";
+  }
+
+  if(msg.includes("google")){
+    window.open("https://google.com");
+    return "Google open kar raha hoon";
+  }
+
+  if(msg.includes("instagram")){
+    window.open("https://instagram.com");
+    return "Instagram khol raha hoon";
+  }
+
+  if(msg.includes("whatsapp")){
+    window.open("https://web.whatsapp.com");
+    return "WhatsApp khol raha hoon";
+  }
+
+  if(msg.includes("facebook")){
+    window.open("https://facebook.com");
+    return "Facebook khol raha hoon";
+  }
+
+  // GOOGLE SEARCH
+  if(msg.includes("search")){
+    let query = msg.replace("search","").trim();
+    if(query){
+      window.open("https://www.google.com/search?q=" + encodeURIComponent(query));
+      return query + " search kar raha hoon";
+    }
+    return "Kya search karna hai?";
   }
 
   // JOKE
   if(msg.includes("joke")){
-    return "Teacher: Homework kahan hai? Student: Sir network issue tha 😂";
-  }
-
-  // EMOTION
-  if(msg.includes("sad")){
-    return "Main yaha hoon ❤️ tension mat lo";
+    return "Teacher: Homework kahan hai? Student: Network issue 😂";
   }
 
   return "Main seekh raha hoon 🤖 aur pucho";
@@ -218,7 +255,6 @@ function send(){
 
   input.value="";
 }
-
 </script>
 
 </body>
