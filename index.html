@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Voice AI Chatbot</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+  text-align:center;
+}
+
+.container{
+  padding:20px;
+}
+
+button{
+  padding:15px;
+  margin:10px;
+  border:none;
+  border-radius:50px;
+  font-size:18px;
+  background:#3b82f6;
+  color:white;
+}
+
+.chat{
+  margin-top:20px;
+  text-align:left;
+  max-width:400px;
+  margin:auto;
+}
+
+.msg{
+  margin:5px;
+  padding:10px;
+  border-radius:10px;
+}
+
+.user{background:#22c55e;}
+.bot{background:#334155;}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🎤 Voice AI Assistant</h2>
+
+<button onclick="startListening()">🎙️ Speak</button>
+
+<div id="chat" class="chat"></div>
+
+</div>
+
+<script>
+
+let recognition;
+
+if ('webkitSpeechRecognition' in window) {
+  recognition = new webkitSpeechRecognition();
+  recognition.lang = "en-US";
+}
+
+// START LISTEN
+function startListening(){
+  recognition.start();
+}
+
+// WHEN USER SPEAKS
+recognition.onresult = async function(event){
+  let text = event.results[0][0].transcript;
+
+  addMsg("🧑 "+text,"user");
+
+  let reply = await getAI(text);
+
+  addMsg("🤖 "+reply,"bot");
+
+  speak(reply);
+};
+
+// ADD MESSAGE
+function addMsg(text,type){
+  let div=document.createElement("div");
+  div.className="msg "+type;
+  div.innerText=text;
+  document.getElementById("chat").appendChild(div);
+}
+
+// AI RESPONSE (SIMPLE)
+async function getAI(msg){
+  // simple fake AI logic
+  if(msg.toLowerCase().includes("hello")) return "Hello! How can I help you?";
+  if(msg.toLowerCase().includes("name")) return "I am your Voice AI assistant.";
+  if(msg.toLowerCase().includes("time")) return new Date().toLocaleTimeString();
+
+  return "I am still learning. Please ask something else.";
+}
+
+// SPEAK (VOICE)
+function speak(text){
+  let speech = new SpeechSynthesisUtterance(text);
+
+  speech.pitch = 0.6; // robotic feel
+  speech.rate = 1;
+  speech.volume = 1;
+
+  speech.lang="en-US";
+
+  speechSynthesis.speak(speech);
+}
+
+</script>
+
+</body>
+</html>
