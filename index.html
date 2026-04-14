@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Voice AI Chatbot</title>
+<title>Jarvis AI Assistant</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -11,109 +11,212 @@ body{
   font-family:Arial;
   background:#0f172a;
   color:white;
-  text-align:center;
+  display:flex;
+  flex-direction:column;
+  height:100vh;
 }
 
-.container{
-  padding:20px;
-}
-
-button{
+.header{
   padding:15px;
-  margin:10px;
-  border:none;
-  border-radius:50px;
-  font-size:18px;
-  background:#3b82f6;
-  color:white;
+  text-align:center;
+  background:#1e293b;
 }
 
 .chat{
-  margin-top:20px;
-  text-align:left;
-  max-width:400px;
-  margin:auto;
+  flex:1;
+  padding:10px;
+  overflow-y:auto;
 }
 
 .msg{
   margin:5px;
   padding:10px;
   border-radius:10px;
+  max-width:75%;
 }
 
-.user{background:#22c55e;}
+.user{background:#22c55e; align-self:flex-end;}
 .bot{background:#334155;}
+
+.input{
+  display:flex;
+  padding:10px;
+  background:#1e293b;
+}
+
+input{
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+}
+
+button{
+  margin-left:5px;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:#3b82f6;
+  color:white;
+}
 </style>
 </head>
 
 <body>
 
-<div class="container">
-
-<h2>🎤 Voice AI Assistant</h2>
-
-<button onclick="startListening()">🎙️ Speak</button>
+<div class="header">🤖 Jarvis AI (No API)</div>
 
 <div id="chat" class="chat"></div>
 
+<div class="input">
+  <input id="msg" placeholder="Type or Speak...">
+  <button onclick="send()">Send</button>
+  <button onclick="startListening()">🎤</button>
 </div>
 
 <script>
 
-let recognition;
+let memory = JSON.parse(localStorage.getItem("memory")) || {};
+let chats = JSON.parse(localStorage.getItem("chats")) || [];
 
-if ('webkitSpeechRecognition' in window) {
-  recognition = new webkitSpeechRecognition();
-  recognition.lang = "en-US";
+function save(){
+  localStorage.setItem("memory",JSON.stringify(memory));
+  localStorage.setItem("chats",JSON.stringify(chats));
 }
 
-// START LISTEN
-function startListening(){
-  recognition.start();
-}
-
-// WHEN USER SPEAKS
-recognition.onresult = async function(event){
-  let text = event.results[0][0].transcript;
-
-  addMsg("🧑 "+text,"user");
-
-  let reply = await getAI(text);
-
-  addMsg("🤖 "+reply,"bot");
-
-  speak(reply);
-};
-
-// ADD MESSAGE
 function addMsg(text,type){
   let div=document.createElement("div");
   div.className="msg "+type;
   div.innerText=text;
   document.getElementById("chat").appendChild(div);
+  document.getElementById("chat").scrollTop=99999;
 }
 
-// AI RESPONSE (SIMPLE)
-async function getAI(msg){
-  // simple fake AI logic
-  if(msg.toLowerCase().includes("hello")) return "Hello! How can I help you?";
-  if(msg.toLowerCase().includes("name")) return "I am your Voice AI assistant.";
-  if(msg.toLowerCase().includes("time")) return new Date().toLocaleTimeString();
+// LOAD OLD CHAT
+chats.forEach(c=>addMsg(c.text,c.type));
 
-  return "I am still learning. Please ask something else.";
+// 🎤 VOICE INPUT
+let recognition = new webkitSpeechRecognition();
+recognition.lang="hi-IN";
+
+function startListening(){
+  recognition.start();
 }
 
-// SPEAK (VOICE)
+recognition.onresult=function(e){
+  let text=e.results[0][0].transcript;
+  document.getElementById("msg").value=text;
+  send();
+};
+
+// 🔊 SPEAK
 function speak(text){
-  let speech = new SpeechSynthesisUtterance(text);
+  let speech=new SpeechSynthesisUtterance(text);
+  speech.lang="hi-IN";
 
-  speech.pitch = 0.6; // robotic feel
-  speech.rate = 1;
-  speech.volume = 1;
+  let voices=speechSynthesis.getVoices();
+  let female=voices.find(v=>v.name.toLowerCase().includes("google"));
+  if(female) speech.voice=female;
 
-  speech.lang="en-US";
+  // emotion
+  if(text.includes("❤️")){speech.pitch=1.4; speech.rate=0.9;}
+  else if(text.includes("sad")){speech.pitch=0.8; speech.rate=0.7;}
+  else{speech.pitch=1.2; speech.rate=1;}
 
   speechSynthesis.speak(speech);
+}
+
+// 🤖 AI LOGIC
+function getAI(msg){
+
+  msg=msg.toLowerCase();
+
+  // NAME
+  if(msg.includes("mera naam")){
+    let name=msg.split(" ").pop();
+    memory.name=name;
+    save();
+    return "ठीक है "+name+" 😊";
+  }
+
+  if(msg.includes("mera naam kya hai")){
+    return memory.name ? "आपका नाम "+memory.name+" है" : "मुझे नहीं पता";
+  }
+
+  // GREETING
+  if(msg.includes("hello")||msg.includes("namaste")){
+    return memory.name ? "नमस्ते "+memory.name+" 👋" : "नमस्ते 👋";
+  }
+
+  // TIME
+  if(msg.includes("time")){
+    return "अभी समय है "+new Date().toLocaleTimeString();
+  }
+
+  // DATE
+  if(msg.includes("date")){
+    return "आज की तारीख "+new Date().toLocaleDateString();
+  }
+
+  // OPEN SITES
+  if(msg.includes("youtube")){
+    window.open("https://youtube.com");
+    return "YouTube खोल रहा हूँ";
+  }
+
+  if(msg.includes("google")){
+    window.open("https://google.com");
+    return "Google खोल रहा हूँ";
+  }
+
+  // NOTE
+  if(msg.includes("note")){
+    memory.note=msg.replace("note","");
+    save();
+    return "Note save ho gaya";
+  }
+
+  if(msg.includes("show note")){
+    return memory.note || "Koi note nahi hai";
+  }
+
+  // DEVICE INFO
+  if(msg.includes("device")){
+    return navigator.userAgent;
+  }
+
+  // JOKE
+  if(msg.includes("joke")){
+    return "Teacher: Homework kahan hai? Student: Sir network issue tha 😂";
+  }
+
+  // EMOTION
+  if(msg.includes("sad")){
+    return "Main yaha hoon ❤️ tension mat lo";
+  }
+
+  return "Main seekh raha hoon 🤖 aur pucho";
+}
+
+// SEND
+function send(){
+  let input=document.getElementById("msg");
+  let text=input.value;
+  if(text==="") return;
+
+  addMsg("🧑 "+text,"user");
+  chats.push({text:"🧑 "+text,type:"user"});
+
+  let reply=getAI(text);
+
+  setTimeout(()=>{
+    addMsg("🤖 "+reply,"bot");
+    chats.push({text:"🤖 "+reply,type:"bot"});
+    save();
+    speak(reply);
+  },500);
+
+  input.value="";
 }
 
 </script>
