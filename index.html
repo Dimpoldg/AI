@@ -179,6 +179,20 @@ function getAI(msg){
     return "ठीक है "+name+" 😊";
   }
 
+  if(msg.includes("news") || msg.includes("latest news")){
+
+  let topic = "latest news";
+
+  // optional category detect
+  if(msg.includes("india")) topic = "india news";
+  else if(msg.includes("sports")) topic = "sports news";
+  else if(msg.includes("tech")) topic = "tech news";
+
+  // Open Google News search
+  window.open("https://www.google.com/search?q=" + encodeURIComponent(topic));
+
+  return "📰 Main Google par " + topic + " dikha raha hoon";
+  }
   if(msg.includes("mera naam kya hai")){
     return memory.name ? "आपका naam "+memory.name+" hai" : "Mujhe nahi pata";
   }
