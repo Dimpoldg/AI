@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Chat</title>
+</head>
+<body style="background:#111;color:white;font-family:sans-serif;text-align:center">
+
+<h2>🤖 Assamese AI</h2>
+
+<input id="input" placeholder="Message likho..." style="padding:10px;width:60%">
+<button onclick="send()">Send</button>
+
+<div id="chat"></div>
+
+<script>
+let history = [];
+
+async function send(){
+  const input = document.getElementById("input");
+  const msg = input.value;
+
+  if(!msg) return;
+
+  document.getElementById("chat").innerHTML += "<p>👤 "+msg+"</p>";
+
+  history.push({ role: "user", content: msg });
+
+  input.value = "";
+
+  const res = await fetch("https://ai-l17t.onrender.com/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      messages: history
+    })
+  });
+
+  const data = await res.json();
+
+  document.getElementById("chat").innerHTML += "<p>🤖 "+data.reply+"</p>";
+
+  history.push({ role: "assistant", content: data.reply });
+}
+</script>
+
+</body>
+</html>
