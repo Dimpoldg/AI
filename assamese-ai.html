@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Assamese AI</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0a0e1a 0%, #0d1f2d 50%, #0a1628 100%);
+      font-family: Georgia, serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .chat-container {
+      width: 100%;
+      max-width: 680px;
+      height: 95vh;
+      max-height: 760px;
+      display: flex;
+      flex-direction: column;
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      border: 1px solid rgba(110,231,183,0.15);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+      overflow: hidden;
+    }
+
+    /* Header */
+    .header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(110,231,183,0.1);
+      background: rgba(110,231,183,0.03);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+
+    .header-icon {
+      width: 46px; height: 46px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6ee7b7, #3b82f6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 0 20px rgba(110,231,183,0.4);
+      flex-shrink: 0;
+    }
+
+    .header-title { color: #f0fdf4; font-size: 18px; font-weight: bold; }
+
+    .header-status {
+      color: #6ee7b7; font-size: 12px;
+      display: flex; align-items: center; gap: 6px; margin-top: 2px;
+    }
+
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #6ee7b7;
+      animation: pulse 2s infinite;
+    }
+
+    /* Messages */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px 8px;
+      scroll-behavior: smooth;
+    }
+
+    .messages::-webkit-scrollbar { width: 3px; }
+    .messages::-webkit-scrollbar-thumb { background: rgba(110,231,183,0.3); border-radius: 2px; }
+
+    /* Welcome */
+    .welcome {
+      text-align: center;
+      padding-top: 30px;
+    }
+
+    .welcome-icon { font-size: 44px; margin-bottom: 14px; }
+    .welcome-title { color: #f0fdf4; font-size: 20px; font-weight: bold; margin-bottom: 8px; }
+    .welcome-sub { color: rgba(240,253,244,0.5); font-size: 14px; margin-bottom: 28px; }
+
+    .suggestions {
+      display: flex; flex-wrap: wrap;
+      gap: 8px; justify-content: center;
+    }
+
+    .suggestion-btn {
+      padding: 8px 14px; border-radius: 20px;
+      background: rgba(110,231,183,0.07);
+      border: 1px solid rgba(110,231,183,0.25);
+      color: #6ee7b7; font-size: 13px;
+      cursor: pointer; font-family: Georgia, serif;
+      transition: all 0.2s;
+    }
+
+    .suggestion-btn:hover, .suggestion-btn:active {
+      background: rgba(110,231,183,0.15);
+      border-color: rgba(110,231,183,0.5);
+    }
+
+    /* Message bubbles */
+    .msg-row {
+      display: flex;
+      margin-bottom: 14px;
+      animation: fadeSlide 0.3s ease-out;
+    }
+
+    .msg-row.user { justify-content: flex-end; }
+    .msg-row.bot  { justify-content: flex-start; }
+
+    .avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0; margin-top: 2px;
+    }
+
+    .bot .avatar {
+      background: linear-gradient(135deg, #6ee7b7, #3b82f6);
+      margin-right: 8px;
+      box-shadow: 0 0 10px rgba(110,231,183,0.3);
+    }
+
+    .user .avatar {
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      margin-left: 8px;
+    }
+
+    .bubble {
+      max-width: 72%;
+      padding: 11px 15px;
+      font-size: 15px;
+      line-height: 1.6;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .user .bubble {
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      color: #f0fdf4;
+      border-radius: 18px 18px 4px 18px;
+      box-shadow: 0 4px 20px rgba(99,102,241,0.3);
+    }
+
+    .bot .bubble {
+      background: rgba(255,255,255,0.07);
+      color: #f0fdf4;
+      border-radius: 18px 18px 18px 4px;
+      border: 1px solid rgba(110,231,183,0.15);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    }
+
+    /* Typing */
+    .typing-row {
+      display: flex; align-items: center;
+      gap: 10px; margin-bottom: 14px;
+      animation: fadeSlide 0.3s ease-out;
+    }
+
+    .typing-bubble {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(110,231,183,0.15);
+      border-radius: 18px 18px 18px 4px;
+      padding: 12px 16px;
+      display: flex; gap: 6px; align-items: center;
+    }
+
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #6ee7b7;
+      animation: bounce 1.2s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    /* Error */
+    .error-msg {
+      text-align: center;
+      padding: 10px 16px; margin: 8px 0;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 12px;
+      color: #fca5a5; font-size: 13px;
+    }
+
+    /* Input area */
+    .input-area {
+      padding: 14px 16px;
+      border-top: 1px solid rgba(110,231,183,0.1);
+      background: rgba(0,0,0,0.2);
+      flex-shrink: 0;
+    }
+
+    .input-box {
+      display: flex; gap: 10px; align-items: flex-end;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(110,231,183,0.2);
+      border-radius: 16px;
+      padding: 10px 12px;
+    }
+
+    textarea {
+      flex: 1;
+      background: transparent;
+      border: none; outline: none;
+      color: #f0fdf4;
+      font-size: 15px;
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      resize: none;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    textarea::placeholder { color: rgba(240,253,244,0.35); }
+
+    .send-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .send-btn.active {
+      background: linear-gradient(135deg, #6ee7b7, #3b82f6);
+      box-shadow: 0 4px 16px rgba(110,231,183,0.3);
+    }
+
+    .send-btn.inactive {
+      background: rgba(255,255,255,0.1);
+      cursor: not-allowed;
+    }
+
+    .send-btn.active:hover { transform: scale(1.05); }
+
+    .hint {
+      text-align: center;
+      margin-top: 7px;
+      color: rgba(240,253,244,0.25);
+      font-size: 11px;
+    }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+      40% { transform: translateY(-7px); opacity: 1; }
+    }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="chat-container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-icon">✦</div>
+    <div>
+      <div class="header-title">Assamese AI</div>
+      <div class="header-status">
+        <span class="status-dot"></span>
+        Hamesha available • Powered by Claude
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div class="messages" id="messages">
+    <div class="welcome" id="welcome">
+      <div class="welcome-icon">✦</div>
+      <div class="welcome-title">Namaste! Main hun Assamese AI</div>
+      <div class="welcome-sub">Koi bhi sawaal poochein — main jawab dunga</div>
+      <div class="suggestions">
+        <button class="suggestion-btn" onclick="setSuggestion('AI kya hai?')">AI kya hai?</button>
+        <button class="suggestion-btn" onclick="setSuggestion('Python kaise seekhein?')">Python kaise seekhein?</button>
+        <button class="suggestion-btn" onclick="setSuggestion('Healthy diet tips batao')">Healthy diet tips batao</button>
+        <button class="suggestion-btn" onclick="setSuggestion('Motivational quote do')">Motivational quote do</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-area">
+    <div class="input-box">
+      <textarea id="userInput" rows="1" placeholder="Yahan apna sawaal likhein..."
+        oninput="autoResize(this); updateBtn()"
+        onkeydown="handleKey(event)"></textarea>
+      <button class="send-btn inactive" id="sendBtn" onclick="sendMessage()">➤</button>
+    </div>
+    <div class="hint">Send button dabayein ya Enter — Shift+Enter naya line</div>
+  </div>
+</div>
+
+<script>
+  const SYSTEM = "You are a helpful, friendly, and knowledgeable AI assistant named Assamese AI. Answer questions clearly and concisely. Be warm and conversational.";
+  let history = [];
+  let loading = false;
+
+  function setSuggestion(text) {
+    const inp = document.getElementById('userInput');
+    inp.value = text;
+    autoResize(inp);
+    updateBtn();
+    inp.focus();
+  }
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+  }
+
+  function updateBtn() {
+    const val = document.getElementById('userInput').value.trim();
+    const btn = document.getElementById('sendBtn');
+    btn.className = 'send-btn ' + (val && !loading ? 'active' : 'inactive');
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function scrollBottom() {
+    const m = document.getElementById('messages');
+    m.scrollTop = m.scrollHeight;
+  }
+
+  function addMessage(role, text) {
+    document.getElementById('welcome')?.remove();
+
+    const row = document.createElement('div');
+    row.className = 'msg-row ' + (role === 'user' ? 'user' : 'bot');
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = role === 'user' ? '👤' : '✦';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+
+    if (role === 'user') {
+      row.appendChild(bubble);
+      row.appendChild(avatar);
+    } else {
+      row.appendChild(avatar);
+      row.appendChild(bubble);
+    }
+
+    document.getElementById('messages').appendChild(row);
+    scrollBottom();
+  }
+
+  function showTyping() {
+    const row = document.createElement('div');
+    row.className = 'typing-row';
+    row.id = 'typing';
+
+    const av = document.createElement('div');
+    av.className = 'avatar bot';
+    av.style.cssText = 'background:linear-gradient(135deg,#6ee7b7,#3b82f6);margin-right:8px;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;';
+    av.textContent = '✦';
+
+    const bub = document.createElement('div');
+    bub.className = 'typing-bubble';
+    bub.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+
+    row.appendChild(av);
+    row.appendChild(bub);
+    document.getElementById('messages').appendChild(row);
+    scrollBottom();
+  }
+
+  function removeTyping() {
+    document.getElementById('typing')?.remove();
+  }
+
+  function showError(msg) {
+    const div = document.createElement('div');
+    div.className = 'error-msg';
+    div.textContent = msg;
+    document.getElementById('messages').appendChild(div);
+    scrollBottom();
+    setTimeout(() => div.remove(), 4000);
+  }
+
+  async function sendMessage() {
+    const inp = document.getElementById('userInput');
+    const text = inp.value.trim();
+    if (!text || loading) return;
+
+    loading = true;
+    inp.value = '';
+    autoResize(inp);
+    updateBtn();
+
+    addMessage('user', text);
+    history.push({ role: 'user', content: text });
+
+    showTyping();
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: SYSTEM,
+          messages: history
+        })
+      });
+
+      const data = await res.json();
+      const reply = (data.content || []).map(b => b.text || '').join('') || 'Koi jawab nahi mila.';
+      removeTyping();
+      addMessage('assistant', reply);
+      history.push({ role: 'assistant', content: reply });
+
+    } catch (e) {
+      removeTyping();
+      showError('Kuch gadbad ho gayi. Dobara try karein.');
+      history.pop();
+    } finally {
+      loading = false;
+      updateBtn();
+      inp.focus();
+    }
+  }
+</script>
+</body>
+</html>
